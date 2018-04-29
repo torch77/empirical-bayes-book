@@ -1,0 +1,10 @@
+#### Beta Distribution
+
+- Good for modelling probabilities (flexible and constratied to 0-1)
+- Modelling batting average, a good choice is binomial b/c it's a number of successes out of a number of trials
+	- so a batting average for 100 at bats can be modelled as binomial(100, p) where p is the prob of success
+	- we use the beta distribution to model our prior beliefs about p (e.g. p should be between ~.270 and ~.360 for almost all cases)
+	- to update the beta distrubtion of p (prior -> posterior) we do: Beta(alpha + hits, beta + misses) see page 14
+	
+
+- 	
