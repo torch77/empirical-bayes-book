@@ -5,6 +5,30 @@
 	- so a batting average for 100 at bats can be modelled as binomial(100, p) where p is the prob of success
 	- we use the beta distribution to model our prior beliefs about p (e.g. p should be between ~.270 and ~.360 for almost all cases)
 	- to update the beta distrubtion of p (prior -> posterior) we do: Beta(alpha + hits, beta + misses) see page 14
-	
+	- we can use the expected value of the resulting posterior beta distribution as our new estimate of p
+		- E[Beta(a,b)] = a / (a+b)
+		- 
 
-- 	
+- Simulating the Conujuate Prior
+	- beta distribution is conjugate prior of binomial
+	- we want to answer the question: what is the true batting average for someone who has gone 100/300 (.300) at the plate?
+	- simulate 10 million players by generating 10 million batting averages from our prior - Beta(81,219)
+	- give each player 300 "at bats" by running a binomial for each of them with their generated batting average
+	- select out those players who got 100 hits and plot their "true averages" assigned by the beta distribution
+		- this matches exactly our plot of the posterior distribution we got by adding hits to a and misses to b 
+	- in this way we can simulate from the prior, pull out the ones who matched the "evidence" (the player hit 100/300), and arrive at the posterior w/t deriving it
+
+
+#### Empirical Bayes Estimation
+
+- if you have a lot of examples, you don't need prior expectations
+- empirical bayes is also useful to deal with situations where you have a few observations rather than just setting some threshold below which you won't consider data b/c that is subjective 
+- use a beta distribution fit on a lot of observations to improve each individually
+
+- Worked Batting Average example
+	- create dataset of batting averages by players. Who is best/worst? Can't just pick people w/ highest or lowest BA b/c you get players who had only 1-2 ABs and always got hits or always got out. 
+	- We want the "real" good/bad players. But what does "real" mean? More than 50 ABs, 100, 1000?
+	- use empirical bayes to find these good/bad players
+	- Step 1
+		- estimate a prior from all of the data 
+		- 
