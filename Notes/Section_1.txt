@@ -1,0 +1,72 @@
+#### Beta Distribution - Chapter 2
+
+- Good for modelling probabilities (flexible and constratied to 0-1)
+- Modelling batting average, a good choice is binomial b/c it's a number of successes out of a number of trials
+	- so a batting average for 100 at bats can be modelled as binomial(100, p) where p is the prob of success
+	- we use the beta distribution to model our prior beliefs about p (e.g. p should be between ~.270 and ~.360 for almost all cases)
+	- to update the beta distrubtion of p (prior -> posterior) we do: Beta(alpha + hits, beta + misses) see page 14
+	- we can use the expected value of the resulting posterior beta distribution as our new estimate of p
+		- E[Beta(a,b)] = a / (a+b)
+		- 
+
+- Simulating the Conujuate Prior
+	- beta distribution is conjugate prior of binomial
+	- we want to answer the question: what is the true batting average for someone who has gone 100/300 (.300) at the plate?
+	- simulate 10 million players by generating 10 million batting averages from our prior - Beta(81,219)
+	- give each player 300 "at bats" by running a binomial for each of them with their generated batting average
+	- select out those players who got 100 hits and plot their "true averages" assigned by the beta distribution
+		- this matches exactly our plot of the posterior distribution we got by adding hits to a and misses to b 
+	- in this way we can simulate from the prior, pull out the ones who matched the "evidence" (the player hit 100/300), and arrive at the posterior w/t deriving it
+
+	- wiki conjugate prior def: In Bayesian probability theory, if the posterior distributions p(θ | x) are in the same probability distribution family as the prior probability distribution p(θ), the prior and posterior are then called conjugate distributions, and the prior is called a conjugate prior for the likelihood function.
+
+
+#### Empirical Bayes Estimation - Chapter 3
+
+- if you have a lot of examples, you don't need prior expectations
+- empirical bayes is also useful to deal with situations where you have a few observations rather than just setting some threshold below which you won't consider data b/c that is subjective 
+- use a beta distribution fit on a lot of observations to improve each individually
+
+- Worked Batting Average example
+	- create dataset of batting averages by players. Who is best/worst? Can't just pick people w/ highest or lowest BA b/c you get players who had only 1-2 ABs and always got hits or always got out. 
+	- We want the "real" good/bad players. But what does "real" mean? More than 50 ABs, 100, 1000?
+	- use empirical bayes to find these good/bad players
+	- Step 1
+		- estimate a prior from all of the data 
+			- we subset to players w/ at least 500 ABs to reduce noise but ch. 7 has more on this. 
+			- usually you decide on a prior ahead of time rather than estimating directly from the data you're analyzing
+			- however, this is ok if we have a lot of observations
+			- we choose a beta prior based on the observed distribution of averages. if there had been multiple peaks we might have needed a mixture of betas
+			- we are fitting X ~ Beta(a0, B0) where X is batting average and has a beta dist. we want to estimate a0 and B0
+			- we can fit the distribution using MLE 
+				- re-read notes from school on this but he's making a function to get -log-likelihood from an alpha and beta value which the mle function is optimizing over
+			- an alternative to all of this is to use the BayesAB package plotbeta function to eyeball it
+	- Step 2
+		- use the derived values of alpha and beta for our prior beta distribution
+		- we now update the prior with each individual players AB and hits (the evidence) to arrive at new parameters for their individual posterior distribution 
+			- to do this with beta dist we just add the estimated a0 to the player's hits and the a0+b0 to their number of AB
+			- this ease of updating is possible b/c beta is a conjutae prior for binomial
+		- we can easily repeat this across all players
+		- see chart for comparison of original BA's and updated BA's
+		- for players w/o a lot of evidence (ABs) their updated BA is "shrunk" towards the prior in a process called "shrinkage"
+
+
+#### Credible Intervals - Chapter 4
+
+- frequentists would calculate a binomial proportion confidence interval around BA (p of success) but this doesn't bring in information from the whole dataset like Bayesian credible intervals do
+- how does our uncertainty around the parameter in question (BA) change from player to player? Right now, we only have a point estimate, no information on how "certain" we are about it
+- In our previous empirical bayesian estimation, we're really generating two posterior parameters for each playe (alpha, beta) which we're using to derive the expected value for that players' batting average (mean). We can also use these parameters to plot each players posterior
+
+- calculating credible intervals
+	- easy to do using qbeta function (see example page 31)
+	- we then can have a low/high around our mean which we can plot to indicate uncertanty (confint plot on page 32)
+	
+- conf int vs. cred int
+	- see referenced cross validated post for distinction between conf int and cred int (conf int assumes parameter is fixed while cred in assumes parameter is RV)
+	- as we gain more information/evidence (ABs) credible and confidence intervals coincide
+	- credible and confidence intervals also look more similar when the prior is less informative 
+		- so credible intervals are very helpful when we have a strong prior and few observations b/c we can use that information to bound our interval which an confidence interval can't leverage
+	- credible intervals are narrower for people with less ABs b/c we're implicity incorporating our prior so we "know" we can't have a player with a .800 BA
+
+
+- jeffrey's prior is an uninformative prior and you get a confidence interval = credible interval when you assume a0=.5 and b0=.5
