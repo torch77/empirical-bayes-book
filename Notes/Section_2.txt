@@ -1,0 +1,65 @@
+#### Hypothesis Testing and FDR - Chapter 5
+
+- sometimes rather than just estimating a value, we need to make a decision based off of it
+- since we're estimating many values (BAs) we need to account for the fact some hypothesis test may come up positive by chance via false discovery rate control
+
+- Example of Inclusion to Baseball > .300 "Hall of Fame" - Hank Aaron
+	- Aaron's career BA is .3050 and is shrunken to .3037 after our empirical bayes estimation of it
+	- Thus, it seems he should be in but how certain are we?
+	- we can calculate the probability that his true BA is below .300 via the cdf of the beta distribution (pbeta in R)
+		- this is the Posterior Error Probability (PEP)
+		- 1- PEP = Posterior Inclusion Probability (PIP)
+	- Looking at the PEP across all players (calculated via pbeta) we can be sure that the vast majority don't belong in the Hall of Fame (PEP equal to or close to 1)
+	- Since our cutoff BA is .300, players who have a shrunken BA of .300 will be around ~ .5 PEP
+		- this is b/c the shrunken BA is the peak of our PDF with ~50% on either side
+	- we now have to pick a false discovery rate we're comfortable with (e.g. 5%)
+	- in this example we take the top 100 players and sum their PEP's to see if it is below our chosen FDR
+		- I think alternatively, you could only take players with a PEP lower than your FDR 
+			- this would be more conservative b/c take a bunch and summing PEP allows some players with a higher PEP to get in after being "balanced" out by players w/ a very low PEP (since summing the PEPs is the same as the expected PEP) (see section re this on 43)
+
+- Q-values
+	- instead of experimenting with a bunch of different FDR we can calculate a q-value
+	- a q-value is the cumulative mean of all sorted PEPs
+	- to control the FDR at a given chosen rate X%
+		- we just select players with a q-value < X
+	- q-value allows some players w/ PEP > FDR in the group b/c the group PEP can remain below X b/c of the players w/ very low PEP
+	- we aren't testing a null hypothesis here as much as we are trying to avoid an error in sign or type S error (http://andrewgelman.com/2004/12/29/type_1_type_2_t/)
+
+
+#### Bayesian A/B Testing - Chapter 6
+
+- we've only been looking at one batter at a time so far. what if we wanted to compare 2 at once and determine who is better?
+
+- comparing two players (aaron vs. piazza)
+	- the spread of a posterior represents our uncertainty about the posterior batting average
+	- when doing an a/b test we're asking if i pick randomly from each distribution what's the probability that one is higher than the other
+
+- We need to know the probability one beta distribution is greater than another.
+	- four ways of doing this
+		- Simulation of posterior draws
+			- this is what we're doing in the bayes a/b package
+			- draw some large amount of times from a beta distriubtion defined by our posterior parameter a1 and b1 (use rbeta)
+			- Pros:
+				- easy to do 
+				- computation is cheap w/ modern computers
+			- Cons:
+				- not the most accurate
+		- Numerical integration
+			- each posterior is its own distribution and combined they form a joint distribution
+			- we can create that joint distribution and then as what fraction of it's area lies in the region where piazza's BA > aaron's BA
+			- see david's code but I'd have to see how to do this for other distributions
+		- Closed-form solution
+			- thankfully evan miller derived a closed form solution. see blog post. there is also an implementation (julia) for a/b/c testing
+			- can be slow 
+			- only valid for integer values of alpha for b option. 
+		- Closed-form approximation
+			- with high values of beta and alpha, we can approximate the beta distribution with a normal
+				- see R code for generating normal but basically we calculate the mean and variance of the beta distribution and use them to define the normal (N ~ (mu, sigma))
+			- look up theory of p(u1 > u2) for two normal distributions
+
+- confidence and credible intervals
+	- can do the same a/b calculation using the prop.test function
+	- variables in data frame in example
+		- posterior probability that piazz > aaron
+		- estimate is by how much he's better
+		- conf.low and conf.high are credible intervals around the size of that difference
