@@ -1,0 +1,8 @@
+#### Beta Binomial Regression - Chapter 7
+- we have ignored the fact that there is a relationship between AB's and batting avgerage - batters are given more AB's if they are better
+	- the issue here is that our prior mean we're shrinking towards is too high for low AB players (who aren't as good) and too low for high AB players (who are goo)
+	- figure 7.2 shows this in the difference between the raw and "shrunk" posterior BA's
+		- players w/ a low AB are brought up a ton (up to the prior mean) b/c there is little evidence for them, while players with a high AB stay where they are (compared to prior mean) b/c they have a lot of evidence for them
+		- as a result, we're overestimating lower AB players
+
+- 
