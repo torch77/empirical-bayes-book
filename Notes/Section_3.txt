@@ -1,8 +1,37 @@
 #### Beta Binomial Regression - Chapter 7
 - we have ignored the fact that there is a relationship between AB's and batting avgerage - batters are given more AB's if they are better
-	- the issue here is that our prior mean we're shrinking towards is too high for low AB players (who aren't as good) and too low for high AB players (who are goo)
+	- the issue here is that our prior mean we're shrinking towards is too high for low AB players (who aren't as good) and too low for high AB players (who are good)
 	- figure 7.2 shows this in the difference between the raw and "shrunk" posterior BA's
 		- players w/ a low AB are brought up a ton (up to the prior mean) b/c there is little evidence for them, while players with a high AB stay where they are (compared to prior mean) b/c they have a lot of evidence for them
 		- as a result, we're overestimating lower AB players
 
-- 
+- Accounting for AB in the model
+	- have been modelling as a generative process - https://en.wikipedia.org/wiki/Generative_model
+	- Specifically, 
+		- pi ~ Beta(a0, B0)
+		- Hi ~ Binom(ABi, pi)
+	- can re-parametrize beta dist as:
+		- pi ~ Beta(u0/sig0, (1-u0)/sig0) where
+			- u0 is the mean batting average and controls location of prior
+			- sig0 is std. dev and = 1/(a+b) and controls dispersion of prior
+	- since we want to move a player's prior to account for their number of AB we want to include AB as a linear term in u for each prior
+		- ui = u0 + uAB*log(AB) where uAB is a coef to be estimated
+		- a0,i = ui/sig0
+		- B0,i = (1-ui)/sig0
+		- pi ~ Beta(a0,i, B0,i)
+		- Hi ~ Binom(ABi, pi)
+			- we could also frame this in a logistic function to keep ui from ranging outside of the 0-1 range 
+	- the above framing is called a beta binomial regression
+		- we're allowing the expected value of the beta to be influence by characteristics about the player
+	- Fitting the model
+		- we have to fit three parameters: u0, uAB, sig0
+		- fit using gamlss package: syntax for formula is still a bit strange to me
+		- receive estimates of the three parameters
+		- plotting some example priors shows that as AB increases so does u0 
+		- retrieve fitted u0 and sig0 params for each player and use them to calculate a0 and B0 so we can easily create a new posterior
+		- comparing our estimates from the non-regression model we see that we are not longer overestimating players w/ a small number of ABs
+		- we are in effect shrinking towards a trend now rather than the mean
+
+
+
+
