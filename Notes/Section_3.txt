@@ -31,7 +31,42 @@
 		- retrieve fitted u0 and sig0 params for each player and use them to calculate a0 and B0 so we can easily create a new posterior
 		- comparing our estimates from the non-regression model we see that we are not longer overestimating players w/ a small number of ABs
 		- we are in effect shrinking towards a trend now rather than the mean
+		- we are accounting for AB over a player's career as evidence for them being better or worse (based on BA) so this model wouldn't be good for rookies
 
 
+#### Empirical Bayesian Hierarchical Modeling - Chapter 7
+- From wikipedia: Hierarchical modeling is used when information is available on several different levels of observational units.
+	- in this case we know whether or not a batter (unit) is left or right handed
+- accounting for AB was also creating a hierarchical model b/c the prior is not fixed for all players but varies w/ latent variables
 
+- Accounting for handedness
+	- left-handed and right-handed players differ in BA slightly so we should include that
+		- we can simply include handedness linearly in the model so now:
+			- ui = u0 + uAB*log(AB) + uHAND*Handedness where uAB and uHAND are coefs to be estimated
+			- a0,i = ui/sig0
+			- B0,i = (1-ui)/sig0
+			- pi ~ Beta(a0,i, B0,i)
+			- Hi ~ Binom(ABi, pi)
 
+- Accouting for time when player was active
+	- we shouldn't expect players from the 1800's to be the same as 1950's to be the same as now
+	- if we look at the mean batting average by decade we see a non-linear wave like trend representing changes in the game (p 70)
+	- since we see a non-linear trend we shouldn't include the term as a linear one. Instead we can use the ns function to fit a cubic spline to the wave like form of the trend.
+	- so we now have:
+		- ui = u0 + uAB*log(AB) + uHAND*Handedness + uNS*NS(year, df = 5) where uAB and uHAND are coefs to be estimated and uNS is a vector of 5 coefs to be estimated (one for each df of the spline)
+		- a0,i = ui/sig0
+		- B0,i = (1-ui)/sig0
+		- pi ~ Beta(a0,i, B0,i)
+		- Hi ~ Binom(ABi, pi)
+
+- Additional terms
+	- we also include an interaction term between handedness and year to see how handedness has changed over time. 
+
+- Getting posteriors
+	- to get a posterior for existing data we can use the fitted fx to extract the fitted mu/sigmas for each player and update them w/ each player's results
+	- we can use the predict fx on new data and follow the same steps
+	- In the new dataframe on page 72, the model depends on every column to produce it's estimate of mu and sigma. I blieve the reason you still want to compute the posterior i 
+
+- Hyperparameters
+	- there is uncertainty in our hyperparameters (a0, b0, coefs) that we have been ignoring
+	- this is about as complex of a model as you should fit w/ this approach
